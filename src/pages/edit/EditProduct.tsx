@@ -15,7 +15,7 @@ import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createProduct, getProductById, updateProduct } from "../../api/product.api";
+import { getProductById, updateProduct } from "../../api/product.api";
 import type { CreateProductPayload } from "../../types/product.types";
 
 const EditProduct = () => {
@@ -26,8 +26,8 @@ const EditProduct = () => {
   const [formData, setFormData] = useState<CreateProductPayload>({
     name: "",
     description: "",
-    price: "",
-    stock: "",
+    price: 0,
+    stock:0,
   });
 
  useEffect(() => {
@@ -40,8 +40,8 @@ const EditProduct = () => {
         setFormData({
           name: res.name ?? "",
           description: res.description ?? "",
-          price: String(res.price ?? ""),
-          stock: String(res.stock ?? ""),
+          price: (res.price ?? 0),
+          stock: (res.stock ??0),
         });
       }
     } catch (error) {

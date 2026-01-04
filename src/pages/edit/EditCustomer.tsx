@@ -15,9 +15,6 @@ import {
 } from "@mui/material";
 import {
   Person,
-  Business,
-  Email,
-  Phone,
   LocationOn,
   Notes,
   Group,

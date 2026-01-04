@@ -1,4 +1,5 @@
-import type { Role } from "../types"
+import type { Role } from "../types/user.types";
+
 export const Auth =()=>{
    return{
      isAuthenticated:true,

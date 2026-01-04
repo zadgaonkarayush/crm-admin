@@ -25,8 +25,8 @@ const CreateProduct = () => {
   const [formData, setFormData] = useState<CreateProductPayload>({
     name: "",
     description: "",
-    price: "",
-    stock: "",
+    price: 0,
+    stock: 0,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

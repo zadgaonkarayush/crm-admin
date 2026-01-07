@@ -1,42 +1,4 @@
-// import React from 'react';
-// import { NavLink } from 'react-router-dom';
-// import { Auth } from '../hooks/auth';
-// import { ROLE_PERMISSIONS } from '../roles/permissions';
 
-// const Sidebar = () => {
-//     const {role} = Auth();
-//     const permissions = ROLE_PERMISSIONS[role];
-
-//   const linkClass = ({ isActive }: { isActive: boolean }) =>
-//     `block px-4 py-2 rounded-md ${
-//       isActive ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700'
-//     }`;
-//   return (
-//     <aside className='mt-20'>
-//       <nav>
-//         {permissions.includes('dashboard')&&(
-//             <NavLink to='/' className={linkClass} end>
-//           Dashboard
-//         </NavLink>
-//         )}
-//         {permissions.includes('users') && (
-//           <NavLink to="/users" className={linkClass}>Users</NavLink>
-//         )}
-//         {permissions.includes('products') && (
-//           <NavLink to="/products" className={linkClass}>Products</NavLink>
-//         )}
-//         {permissions.includes('orders') && (
-//           <NavLink to="/orders" className={linkClass}>Orders</NavLink>
-//         )}
-//         {permissions.includes('customers') && (
-//           <NavLink to="/customers" className={linkClass}>Customers</NavLink>
-//         )}
-//       </nav>
-//     </aside>
-//   );
-// };
-
-// export default Sidebar;
 import {
   Drawer,
   List,

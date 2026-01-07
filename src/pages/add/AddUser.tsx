@@ -22,11 +22,7 @@ interface AddUserForm {
 }
 
 
-const AddUser = ({
- 
-}: {
-  managers: { _id: string; name: string }[];
-}) => {
+const AddUser = () => {
   const { user } = useAuth();
   if (!user) return null;
   console.log(user);

@@ -13,6 +13,7 @@ import {
   Select,
   Typography,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,7 +30,6 @@ const ViewOrder = () => {
   >("pending");
   const [loading, setLoading] = useState(false);
 
-  
   useEffect(() => {
     if (!id) return;
 
@@ -39,9 +39,15 @@ const ViewOrder = () => {
     });
   }, [id]);
 
-  if (!order) {
-    return <Typography>Loading order...</Typography>;
-  }
+ 
+  if (loading || !order) {
+        return (
+          <div className="flex justify-center py-10">
+            <CircularProgress />
+          </div>
+        );
+      }
+    
 
   // ✅ Calculations
   const subtotal = order.lines.reduce(
@@ -79,6 +85,7 @@ setStatus(updated.status);
       setLoading(false);
     }
   };
+  
 
   return (
     <Box className="space-y-6">
@@ -152,7 +159,7 @@ setStatus(updated.status);
             </TableHead>
             <TableBody>
               {order.lines.map((item) => (
-                <TableRow key={item._id}>
+                <TableRow key={item.product._id}>
                   <TableCell>{item.product.name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>₹{item.price.toLocaleString()}</TableCell>

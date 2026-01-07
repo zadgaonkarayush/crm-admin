@@ -15,6 +15,7 @@ export interface CreateProductPayload {
   stock: number;
 }
 export interface UpdateProductPayload {
+  sku?:string;
   name?: string;
   description?: string;
   price?: number;

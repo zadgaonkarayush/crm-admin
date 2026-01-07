@@ -16,19 +16,19 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../api/product.api";
-import type { Product } from "../../types/product.types";
+import type { UpdateProductPayload } from "../../types/product.types";
 
 const ProductView = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState<Product>({
+  const [formData, setFormData] = useState<UpdateProductPayload>({
     sku: "",
     name: "",
     description: "",
-    price: "",
-    stock: "",
+    price: 0,
+    stock: 0,
   });
 
   useEffect(() => {

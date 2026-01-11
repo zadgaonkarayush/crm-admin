@@ -14,7 +14,7 @@ import {
   Stack,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
 type Column = {
   key: string;
@@ -31,8 +31,56 @@ type Props = {
   getRowId?: (row: any) => string;
 };
 
+type TableState ={
+  page:number;
+  searchTerm:string;
+  selectedRow:string[]
+};
+
+type TableAction =
+|{type:'SET_PAGE';payload:number}
+|{type:'SET_SEARCH';payload:string}
+|{type:'TOGGLE_ROW';payload:string}
+|{type:'TOGGLE_ALL';payload:string[]}
+|{type:'RESET_SELECTION'}
+
 const PAGE_SIZE = 10;
 
+function tableReducer(state:TableState,action:TableAction):TableState{
+switch(action.type){
+  case 'SET_PAGE':
+    return {...state,page:action.payload}
+  case 'SET_SEARCH':
+    return{
+      ...state,
+      searchTerm:action.payload,
+      page:1,
+      selectedRow:[]
+    }
+  case 'TOGGLE_ROW':
+    return{
+      ...state,
+      selectedRow:state.selectedRow.includes(action.payload) 
+      ?state.selectedRow.filter(id=>id !== action.payload) 
+      :[...state.selectedRow,action.payload]
+    }
+  case 'TOGGLE_ALL':
+    const selectedAll = action.payload.every(id=>
+        state.selectedRow.includes(id)
+      )
+    return{
+      ...state,
+      selectedRow:selectedAll ?
+      state.selectedRow.filter(id=>!action.payload.includes(id)) :
+      [...new Set([...state.selectedRow,...action.payload])]
+    }
+  case 'RESET_SELECTION':
+    return{...state,selectedRow:[]}
+    default:
+  return state;
+
+}
+}
 const ReusableTable: React.FC<Props> = ({
   columns,
   data,
@@ -41,48 +89,45 @@ const ReusableTable: React.FC<Props> = ({
   onBulkDelete,
   getRowId,
 }) => {
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [state,dispatch] = useReducer(tableReducer,{
+    page:1,
+    searchTerm:'',
+    selectedRow:[]
+  })
+ 
 
   const filteredData = useMemo(() => {
     return data.filter((item) =>
       Object.values(item)
         .join(' ')
         .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+        .includes(state.searchTerm.toLowerCase())
     );
-  }, [data, searchTerm]);
+  }, [data, state.searchTerm]);
 
   const paginatedData = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
+    const start = (state.page - 1) * PAGE_SIZE;
     return filteredData.slice(start, start + PAGE_SIZE);
-  }, [filteredData, page]);
+  }, [filteredData, state.page]);
 
   const selectedAll =
     paginatedData.length > 0 &&
-    paginatedData.every((row) => selectedRows.includes(row._id));
+    paginatedData.every((row) => state.selectedRow.includes(row._id));
 
   const toggleSelectAll = () => {
     const pageIds = paginatedData.map((row) => row._id);
-    if (selectedAll) {
-      setSelectedRows((prev) => prev.filter((id) => !pageIds.includes(id)));
-    } else {
-      setSelectedRows((prev) => [...new Set([...prev, ...pageIds])]);
-    }
+    dispatch({type:'TOGGLE_ALL',payload:pageIds})
   };
 
   const toggleSelectById = (id: string) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
-    );
+    dispatch({type:'TOGGLE_ROW',payload:id})
   };
 
   const resolveRowId = (row: any, index: number) =>
     getRowId ? getRowId(row) : row._id ?? String(index);
 
   useEffect(() => {
-    setSelectedRows([]);
+    dispatch({type:'RESET_SELECTION'})
   }, [data]);
 
   return (
@@ -112,11 +157,9 @@ const ReusableTable: React.FC<Props> = ({
             size="small"
             variant="outlined"
             placeholder="Search..."
-            value={searchTerm}
+            value={state.searchTerm}
             onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-              setSelectedRows([]);
+             dispatch({type:'SET_SEARCH',payload:e.target.value})
             }}
             InputProps={{
               startAdornment: <SearchIcon sx={{ mr: 1, color: 'gray' }} />,
@@ -128,7 +171,7 @@ const ReusableTable: React.FC<Props> = ({
             }}
           />
 
-          {selectedRows.length > 0 && onBulkDelete && (
+          {state.selectedRow.length > 0 && onBulkDelete && (
             <Button
               variant="contained"
               color="error"
@@ -138,9 +181,9 @@ const ReusableTable: React.FC<Props> = ({
                 fontWeight: 'bold',
                 boxShadow: '0 3px 5px 2px rgba(244,67,54,.3)',
               }}
-              onClick={() => onBulkDelete(selectedRows)}
+              onClick={() => onBulkDelete(state.selectedRow)}
             >
-              Delete Selected ({selectedRows.length})
+              Delete Selected ({state.selectedRow.length})
             </Button>
           )}
 
@@ -174,7 +217,7 @@ const ReusableTable: React.FC<Props> = ({
                 <TableCell padding="checkbox">
                   <Checkbox
                     checked={selectedAll}
-                    indeterminate={selectedRows.length > 0 && !selectedAll}
+                    indeterminate={state.selectedRow.length > 0 && !selectedAll}
                     onChange={toggleSelectAll}
                     sx={{
                       color: 'white',
@@ -199,7 +242,7 @@ const ReusableTable: React.FC<Props> = ({
 
           <TableBody>
             {paginatedData.map((row, index) => {
-              const isSelected = selectedRows.includes(row._id);
+              const isSelected = state.selectedRow.includes(row._id);
               return (
                 <TableRow
                   key={resolveRowId(row, index)}
@@ -241,8 +284,8 @@ const ReusableTable: React.FC<Props> = ({
         <Stack direction="row" justifyContent="flex-end" mt={3}>
           <Pagination
             count={Math.ceil(filteredData.length / PAGE_SIZE)}
-            page={page}
-            onChange={(_, value) => setPage(value)}
+            page={state.page}
+            onChange={(_, value) => dispatch({type:'SET_PAGE',payload:value})}
             color="primary"
             sx={{
               '& .MuiPaginationItem-root': {

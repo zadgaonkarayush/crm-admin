@@ -1,5 +1,6 @@
 import {
   Button,
+  Checkbox,
   Pagination,
   Paper,
   Table,
@@ -8,9 +9,12 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Typography,
+  TextField,
+  Stack,
 } from '@mui/material';
-import React, { useMemo, useState,useEffect } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
+import React, { useEffect, useMemo, useState } from 'react';
 
 type Column = {
   key: string;
@@ -32,14 +36,14 @@ const PAGE_SIZE = 10;
 const ReusableTable: React.FC<Props> = ({
   columns,
   data,
-  title = 'title',
+  title = 'Title',
   onCreate,
   onBulkDelete,
   getRowId,
 }) => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [seletctedRow, setSelectedRows] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
     return data.filter((item) =>
@@ -55,121 +59,203 @@ const ReusableTable: React.FC<Props> = ({
     return filteredData.slice(start, start + PAGE_SIZE);
   }, [filteredData, page]);
 
-  const selectedAll = paginatedData.length > 0 &&
-  paginatedData.every((row) => seletctedRow.includes(row._id));
+  const selectedAll =
+    paginatedData.length > 0 &&
+    paginatedData.every((row) => selectedRows.includes(row._id));
 
   const toggleSelectAll = () => {
     const pageIds = paginatedData.map((row) => row._id);
     if (selectedAll) {
-      setSelectedRows((prev)=>
-        prev.filter((id)=>!pageIds.includes(id))
-      )
+      setSelectedRows((prev) => prev.filter((id) => !pageIds.includes(id)));
     } else {
-     setSelectedRows((prev) => [
-      ...new Set([...prev, ...pageIds]),
-    ]);
+      setSelectedRows((prev) => [...new Set([...prev, ...pageIds])]);
     }
   };
+
   const toggleSelectById = (id: string) => {
     setSelectedRows((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
   };
+
   const resolveRowId = (row: any, index: number) =>
-  getRowId ? getRowId(row) : row._id ?? String(index);
+    getRowId ? getRowId(row) : row._id ?? String(index);
 
   useEffect(() => {
-  setSelectedRows([]);
-}, [data]);
+    setSelectedRows([]);
+  }, [data]);
 
   return (
-    <Paper className='p-4'>
+    <Paper
+      elevation={5}
+      sx={{
+        p: 3,
+        borderRadius: 3,
+        background: '#f3f6f9',
+        boxShadow: '0px 4px 20px rgba(0,0,0,0.1)',
+      }}
+    >
       {/* Header */}
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4'>
-        <h2 className='text-xl font-semibold'>{title}</h2>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+        mb={3}
+      >
+        <Typography variant="h6" fontWeight="bold" color="#3f51b5">
+          {title}
+        </Typography>
 
-        <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full sm:w-auto'>
-          <div className='flex items-center border px-3 py-2 rounded w-full sm:w-64'>
-            <SearchIcon className='mr-2 text-gray-500' />
-            <input
-              placeholder='Search...'
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-                setSelectedRows([]);
-              }}
-              className='outline-none'
-            />
-          </div>
-          {seletctedRow.length > 0 && onBulkDelete && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} width={{ xs: '100%', sm: 'auto' }}>
+          <TextField
+            size="small"
+            variant="outlined"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+              setSelectedRows([]);
+            }}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'gray' }} />,
+            }}
+            sx={{
+              width: { xs: '100%', sm: 250 },
+              backgroundColor: 'white',
+              borderRadius: 1,
+            }}
+          />
+
+          {selectedRows.length > 0 && onBulkDelete && (
             <Button
-              variant='contained'
-              color='error'
-              onClick={() => onBulkDelete(seletctedRow)}
-              className='w-full sm:w-auto'
+              variant="contained"
+              color="error"
+              sx={{
+                background: 'linear-gradient(45deg, #f44336 30%, #d32f2f 90%)',
+                color: '#fff',
+                fontWeight: 'bold',
+                boxShadow: '0 3px 5px 2px rgba(244,67,54,.3)',
+              }}
+              onClick={() => onBulkDelete(selectedRows)}
             >
-              Deleted Selected ({seletctedRow.length})
+              Delete Selected ({selectedRows.length})
             </Button>
           )}
 
           {onCreate && (
-            <Button variant='contained' onClick={onCreate}>
+            <Button
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
+                color: '#fff',
+                fontWeight: 'bold',
+                boxShadow: '0 3px 5px 2px rgba(33,203,243,.3)',
+              }}
+              onClick={onCreate}
+            >
               Create New
             </Button>
           )}
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
       {/* Table */}
-      <TableContainer>
-        <Table size='small'>
+      <TableContainer sx={{ borderRadius: 2 }}>
+        <Table size="small">
           <TableHead>
-            <TableRow>
+            <TableRow
+              sx={{
+                background: 'linear-gradient(90deg, #3f51b5 0%, #2196f3 100%)',
+              }}
+            >
               {onBulkDelete && (
-                <TableCell padding='checkbox'>
-                  <input
-                    type='checkbox'
+                <TableCell padding="checkbox">
+                  <Checkbox
                     checked={selectedAll}
+                    indeterminate={selectedRows.length > 0 && !selectedAll}
                     onChange={toggleSelectAll}
+                    sx={{
+                      color: 'white',
+                      '&.Mui-checked': { color: 'white' },
+                    }}
                   />
                 </TableCell>
               )}
               {columns.map((col) => (
-                <TableCell key={col.key}>{col.label}</TableCell>
+                <TableCell
+                  key={col.key}
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'white',
+                  }}
+                >
+                  {col.label}
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {paginatedData.map((row, index) => (
-              <TableRow key={row._id || index} hover>
-                {onBulkDelete && (
-                  <TableCell padding='checkbox'>
-                    <input
-                      type='checkbox'
-                      checked={seletctedRow.includes(row._id)}
-                      onChange={() => toggleSelectById(row._id)}
-                    />
-                  </TableCell>
-                )}
-                {columns.map((col) => (
-                  <TableCell key={col.key}>
-                    {col.render ? col.render(row) : row[col.key]}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {paginatedData.map((row, index) => {
+              const isSelected = selectedRows.includes(row._id);
+              return (
+                <TableRow
+                  key={resolveRowId(row, index)}
+                  hover
+                  sx={{
+                    transition: '0.2s',
+                    backgroundColor: index % 2 === 0 ? '#fff' : '#f0f4ff',
+                    ...(isSelected && {
+                      backgroundColor: '#c8e6c9 !important',
+                    }),
+                    '&:hover': {
+                      backgroundColor: '#e0f7fa !important',
+                    },
+                  }}
+                >
+                  {onBulkDelete && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => toggleSelectById(row._id)}
+                        sx={{
+                          color: '#3f51b5',
+                          '&.Mui-checked': { color: '#3f51b5' },
+                        }}
+                      />
+                    </TableCell>
+                  )}
+                  {columns.map((col) => (
+                    <TableCell key={col.key}>
+                      {col.render ? col.render(row) : row[col.key]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
 
-        <div className='flex justify-end mt-4'>
+        <Stack direction="row" justifyContent="flex-end" mt={3}>
           <Pagination
             count={Math.ceil(filteredData.length / PAGE_SIZE)}
             page={page}
             onChange={(_, value) => setPage(value)}
+            color="primary"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                fontWeight: 'bold',
+                color: '#3f51b5',
+              },
+              '& .Mui-selected': {
+                background: 'linear-gradient(45deg, #3f51b5 30%, #2196f3 90%)',
+                color: '#fff',
+              },
+            }}
           />
-        </div>
+        </Stack>
       </TableContainer>
     </Paper>
   );

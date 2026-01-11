@@ -18,6 +18,7 @@ import {
   getSalesCustomer,
 } from '../api/dashboard.api';
 import type { DashboardCard, SalesCustomer } from '../types/dashboard.types';
+import { CircularProgress } from '@mui/material';
 
 const orderStatusData = [
   { name: 'Completed', value: 520 },
@@ -81,7 +82,9 @@ const Dashboard = () => {
   console.log(salesData);
 
   if (!dashboardStat) {
-    return <div className='p-6'>Loading dashboard...</div>;
+    return  <div className='flex justify-center py-10'>
+            <CircularProgress />
+          </div>
   }
   return (
     <div className='p-6 min-h-screen bg-gradient-to-br from-slate-100 to-slate-200'>

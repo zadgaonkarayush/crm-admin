@@ -12,6 +12,7 @@ import type { Role } from '../../types/user.types';
 import { useAuth } from '../../context/authContext';
 import { createUser, getAllUsers } from '../../api/user.api';
 import { useNavigate } from 'react-router-dom';
+import { showError, showSuccess } from '../../utils/toast';
 
 interface AddUserForm {
   name: string;
@@ -21,12 +22,11 @@ interface AddUserForm {
   managerId: string;
 }
 
-
 const AddUser = () => {
   const { user } = useAuth();
   if (!user) return null;
   console.log(user);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const isAdmin = user.role === 'admin';
   const isManager = user.role === 'manager';
@@ -38,40 +38,43 @@ const AddUser = () => {
     role: 'sales',
     managerId: isManager ? user._id : '',
   });
- const [managers, setManagers] = useState<{ _id: string; name: string }[]>([]);
+  const [managers, setManagers] = useState<{ _id: string; name: string }[]>([]);
 
- useEffect(()=>{
- const loadManager =async()=>{
-  const users = await getAllUsers();
-  const onlyManager = users.filter((u:any)=>u.role === "manager");
-  setManagers(onlyManager)
- }
- if (isAdmin) {
-    loadManager();
-  }
- },[isAdmin])
+  useEffect(() => {
+    const loadManager = async () => {
+      const users = await getAllUsers();
+      const onlyManager = users.filter((u: any) => u.role === 'manager');
+      setManagers(onlyManager);
+    };
+    if (isAdmin) {
+      loadManager();
+    }
+  }, [isAdmin]);
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async() => {
-    const payload = {
-      name: form.name,
-      email: form.email,
-      password: form.password,
-      role: isManager ? 'sales' : form.role,
-      managerId: isManager
-        ? user._id
-        : form.role === 'sales'
-        ? form.managerId
-        : undefined,
-    };
-    const res = await createUser(payload)
-    console.log(res.message);
-    navigate('/users')
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: isManager ? 'sales' : form.role,
+        managerId: isManager
+          ? user._id
+          : form.role === 'sales'
+          ? form.managerId
+          : undefined,
+      };
+      const res = await createUser(payload);
+      showSuccess('User added successfully!');
+      navigate('/users');
+    } catch (error) {
+      console.error(error);
+      showError('Failed to add User. Pleaser try again later!');
+    }
   };
-
-
 
   return (
     <Paper className='p-6  mx-auto'>
@@ -147,9 +150,13 @@ const AddUser = () => {
       )}
 
       <div className='flex justify-end gap-2'>
-        <Button variant='contained' color='warning'
-        onClick={()=>navigate(-1)}
-        >Back</Button>
+        <Button
+          variant='contained'
+          color='warning'
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </Button>
         <Button variant='contained' onClick={handleSubmit}>
           Save
         </Button>

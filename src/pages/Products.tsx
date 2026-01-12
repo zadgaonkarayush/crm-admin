@@ -12,6 +12,7 @@ import {
 } from '../api/product.api';
 import type { Product } from '../types/product.types';
 import ErrorState from '../components/ErrorState';
+import { showError, showSuccess } from '../utils/toast';
 
 const Products = () => {
   const navigate = useNavigate();
@@ -28,9 +29,15 @@ const Products = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteProduct(id);
+    try {
+      await deleteProduct(id);
 
-    setProducts((prev) => prev.filter((user) => user._id !== id));
+      setProducts((prev) => prev.filter((user) => user._id !== id));
+      showSuccess('Product deleted successfully!');
+    } catch (error) {
+      console.error(error);
+      showError('Failed to delete product. Please try again later!');
+    }
   };
 
   const handleBulkDelete = async (ids: string[]) => {
@@ -38,8 +45,14 @@ const Products = () => {
 
     if (!window.confirm(`Delete ${ids.length} products?`)) return;
 
-    await bulkProductDelete(ids);
-    setProducts((prev) => prev.filter((user) => !ids.includes(user._id)));
+    try {
+      await bulkProductDelete(ids);
+      setProducts((prev) => prev.filter((user) => !ids.includes(user._id)));
+      showSuccess(`${ids.length} products deleted successfully!`);
+    } catch (error) {
+      console.error(error);
+      showError('Failed to delete products. Please try again later!');
+    }
   };
 
   useEffect(() => {

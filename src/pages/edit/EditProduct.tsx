@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProductById, updateProduct } from "../../api/product.api";
 import type { CreateProductPayload } from "../../types/product.types";
+import { showError, showSuccess } from "../../utils/toast";
 
 const EditProduct = () => {
   const navigate = useNavigate();
@@ -68,9 +69,12 @@ const EditProduct = () => {
       price: Number(formData.price),
       stock: Number(formData.stock),
       });
+      showSuccess('Product updated successfully!');
       navigate(-1);
+    
     } catch (error) {
       console.error(error);
+      showError('Failed to edit product. Please try again later')
     } finally {
       setLoading(false);
     }

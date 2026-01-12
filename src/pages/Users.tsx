@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { deleteBulkUser, deleteUser, getAllUsers } from "../api/user.api";
 import type { User } from "../types/user.types";
+import { showError, showSuccess } from "../utils/toast";
 
 const Users = () => {
   
@@ -19,16 +20,28 @@ const [loading, setLoading] = useState(true);
      if (!ids.length) return;
 
   if (!window.confirm(`Delete ${ids.length} users?`)) return;
-   await deleteBulkUser(ids);
+   try{
+    await deleteBulkUser(ids);
 
    setData((prev)=>prev.filter((user)=>!ids.includes(user._id)));
+   showSuccess(`${ids.length} users deleted successfully!`)
+   }catch(error){
+   console.error(error);
+   showError('Failed to delete users. Please try again.')
+   }
   };
   const handleDelete =async(id:string)=>{
       if (!window.confirm("Are you sure you want to delete this user?")) return;
 
-      await deleteUser(id);
-
+    try{
+        await deleteUser(id);
+      
       setData((prev)=>prev.filter((user)=>user._id !== id))
+       showSuccess(`User deleted successfully!`)
+    }catch(error){
+      console.error(error);
+   showError('Failed to delete user. Please try again.')
+    }
   }
 
   const handleCreateUser = () => {

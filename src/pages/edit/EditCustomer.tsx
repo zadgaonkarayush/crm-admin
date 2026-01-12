@@ -23,6 +23,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCustomerById, updateCustomer } from "../../api/customer.api";
 import { getAllUsers } from "../../api/user.api";
 import { useAuth } from "../../context/authContext";
+import { showError, showSuccess } from "../../utils/toast";
 
 const EditCustomer = () => {
   const { id } = useParams<{ id: string }>();
@@ -84,10 +85,11 @@ const EditCustomer = () => {
             console.log(id)
 
       await updateCustomer(id, form);
+      showSuccess('Customer updated successfully!')
       navigate("/customers");
     } catch (error) {
       console.error(error);
-      alert("Failed to update customer");
+      showError("Failed to update customer");
     }
   };
 

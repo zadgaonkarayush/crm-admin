@@ -101,7 +101,7 @@ const ViewOrder = () => {
       {/* Order Summary */}
       <Paper sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Typography>
-          <strong>Order ID:</strong> {order._id}
+          <strong>Order ID:</strong> {`Order ${order?._id?.slice(-6).toUpperCase()}`}
         </Typography>
         <Typography>
           <strong>Date:</strong>{' '}

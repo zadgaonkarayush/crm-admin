@@ -7,8 +7,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 
 import ReusableTable from '../components/ReusableTable';
-import { getAllCustomer } from '../api/customer.api';
+import { deleteCustomer, getAllCustomer } from '../api/customer.api';
 import type { Customer } from '../types/customer.types';
+import { showError, showSuccess } from '../utils/toast';
 const Customers = () => {
   const navigate = useNavigate();
 
@@ -47,10 +48,21 @@ const Customers = () => {
     [navigate]
   );
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = async(id: string) => {
     // open confirmation modal instead of window.confirm
-    console.log('Delete:', id);
-  }, []);
+   
+    try{
+       await deleteCustomer(id);
+       showSuccess("Customer deleted successfully!");
+       setCustomers((prev)=>prev.filter((customer)=>customer._id!==id))
+
+    }catch(error){
+      console.log(error);
+      showError("Failed to delete customer. Please try again.");
+    }
+  };
+
+    
 
   const columns = useMemo(
     () => [

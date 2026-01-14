@@ -15,16 +15,20 @@ import {
 import {
   dashboardCard,
   getMonthWiseOrders,
+  getOrderStatusCount,
   getSalesCustomer,
 } from '../api/dashboard.api';
 import type { DashboardCard, SalesCustomer } from '../types/dashboard.types';
 import { CircularProgress } from '@mui/material';
+import { getAllOrders } from '../api/orders.api';
+import type{ Order } from '../types/order.types';
 
-const orderStatusData = [
-  { name: 'Completed', value: 520 },
-  { name: 'Pending', value: 210 },
-  { name: 'Cancelled', value: 115 },
-];
+type OrderStatusChartData = {
+  name: string;
+  value: number;
+};
+
+
 
 const monthNames = [
   'Jan',
@@ -41,14 +45,9 @@ const monthNames = [
   'Dec',
 ];
 
-const COLORS = ['#22c55e', '#facc15', '#ef4444'];
+const COLORS = ['#facc15','#22c55e', '#4483ef','#ef4444'];
 
-const recentOrders = [
-  { id: '#ORD001', customer: 'Amit', amount: '₹12,500', status: 'Completed' },
-  { id: '#ORD002', customer: 'Sneha', amount: '₹8,200', status: 'Pending' },
-  { id: '#ORD003', customer: 'Ravi', amount: '₹5,100', status: 'Cancelled' },
-  { id: '#ORD004', customer: 'Pooja', amount: '₹18,000', status: 'Completed' },
-];
+
 
 const Dashboard = () => {
   const [dashboardStat, setDashboardStat] = useState<DashboardCard | null>(
@@ -56,6 +55,9 @@ const Dashboard = () => {
   );
   const [salesData, setSalesData] = useState<SalesCustomer[]>([]);
   const [orderData, setOrderData] = useState([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [orderStatusData, setOrderStatusData] = useState<OrderStatusChartData[]>([]);
+
   useEffect(() => {
     const fetchDashboardStats = async () => {
       const data = await dashboardCard(); // API call
@@ -74,12 +76,27 @@ const Dashboard = () => {
       }));
       setOrderData(chartData);
     };
+    const fetchOrders = async()=>{
+      const data = await getAllOrders();
+      setRecentOrders(data.slice(0,5));
+    }
+    const fetchOrderStatusCount = async()=>{
+      const data = await getOrderStatusCount();
 
+      const formattedData= Object.entries(data).map(([key,value])=>({
+        name:key.charAt(0).toUpperCase()+key.slice(1),
+        value
+      }))
+      setOrderStatusData(formattedData);
+    }
     fetchDashboardStats();
     fetchSalesCustomer();
     fetchMonthOrders();
+    fetchOrders();
+    fetchOrderStatusCount();
   }, []);
-  console.log(salesData);
+ 
+  console.log("Order Status Data:",orderStatusData);
 
   if (!dashboardStat) {
     return  <div className='flex justify-center py-10'>
@@ -205,18 +222,18 @@ const Dashboard = () => {
             <tbody>
               {recentOrders.map((order) => (
                 <tr
-                  key={order.id}
+                  key={order?._id}
                   className='border-b last:border-none hover:bg-slate-50 transition'
                 >
-                  <td className='py-3 font-medium'>{order.id}</td>
-                  <td>{order.customer}</td>
-                  <td>{order.amount}</td>
+                  <td className='py-3 font-medium'>{`Order ${order?._id?.slice(-6).toUpperCase()}`}</td>
+                  <td>{order?.customer?.name}</td>
+                  <td>{order?.total}</td>
                   <td>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'Completed'
+                        order?.status === 'completed'
                           ? 'bg-green-100 text-green-700'
-                          : order.status === 'Pending'
+                          : order?.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
                       }`}

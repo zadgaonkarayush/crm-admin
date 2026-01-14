@@ -37,7 +37,9 @@ const Orders = () => {
   };
   const orderColumns = useMemo(
     () => [
-      { key: '_id', label: 'Order #' },
+      { key: '_id', label: 'Order #' ,
+        render:(row:Order)=>`Order ${row?._id?.slice(-6).toUpperCase()}`
+      },
       {
         key: 'customer',
         label: 'Customer',

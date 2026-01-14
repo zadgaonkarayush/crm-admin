@@ -36,3 +36,9 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
 }
+export interface OrderStatusCounts {
+  pending: number;
+  completed: number;
+  shipped: number;
+  cancelled: number;
+};

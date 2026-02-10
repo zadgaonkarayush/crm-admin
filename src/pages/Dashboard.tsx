@@ -22,6 +22,7 @@ import type { DashboardCard, SalesCustomer } from '../types/dashboard.types';
 import { CircularProgress } from '@mui/material';
 import { getAllOrders } from '../api/orders.api';
 import type{ Order } from '../types/order.types';
+import Calendar from '../components/Calendar';
 
 type OrderStatusChartData = {
   name: string;
@@ -145,6 +146,9 @@ const Dashboard = () => {
       </div>
 
       {/* Charts */}
+      <div>
+        <Calendar />
+      </div>
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10'>
         <div className='bg-white/70 backdrop-blur rounded-2xl shadow p-6'>
           <h2 className='text-lg font-semibold text-slate-800 mb-4'>

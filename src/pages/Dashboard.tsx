@@ -1,4 +1,4 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -21,15 +21,24 @@ import {
 import type { DashboardCard, SalesCustomer } from '../types/dashboard.types';
 import { CircularProgress } from '@mui/material';
 import { getAllOrders } from '../api/orders.api';
-import type{ Order } from '../types/order.types';
+import type { Order } from '../types/order.types';
 import Calendar from '../components/Calendar';
 
 type OrderStatusChartData = {
   name: string;
   value: number;
 };
-
-
+type OrderChartData = {
+  month: string;
+  orders: number;
+  revenue: number;
+};
+type MonthOrders = {
+  month: number;
+  year: number;
+  orders: number;
+  revenue: number;
+};
 
 const monthNames = [
   'Jan',
@@ -46,63 +55,68 @@ const monthNames = [
   'Dec',
 ];
 
-const COLORS = ['#facc15','#22c55e', '#4483ef','#ef4444'];
-
-
+const COLORS = ['#facc15', '#22c55e', '#4483ef', '#ef4444'];
 
 const Dashboard = () => {
   const [dashboardStat, setDashboardStat] = useState<DashboardCard | null>(
-    null
+    null,
   );
   const [salesData, setSalesData] = useState<SalesCustomer[]>([]);
-  const [orderData, setOrderData] = useState([]);
+  const [orderData, setOrderData] = useState<OrderChartData[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [orderStatusData, setOrderStatusData] = useState<OrderStatusChartData[]>([]);
+  const [orderStatusData, setOrderStatusData] = useState<
+    OrderStatusChartData[]
+  >([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      const data = await dashboardCard(); // API call
-      setDashboardStat(data);
+    const loadDashboardData = async () => {
+      setLoading(true);
+      try {
+        const [
+          dashboardStats,
+          salesCustomer,
+          monthOrders,
+          orders,
+          orderStatusCount,
+        ] = await Promise.all([
+          dashboardCard(),
+          getSalesCustomer(),
+          getMonthWiseOrders(),
+          getAllOrders(),
+          getOrderStatusCount(),
+        ]);
+        setDashboardStat(dashboardStats);
+        setSalesData(salesCustomer);
+        const chartData = monthOrders.map((item: MonthOrders) => ({
+          month: `${monthNames[item.month - 1]} ${item.year}`,
+          orders: item.orders,
+          revenue: item.revenue,
+        }));
+        setOrderData(chartData);
+        setRecentOrders(orders.slice(0, 5));
+        const formattedData = Object.entries(orderStatusCount).map(
+          ([key, value]) => ({
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            value,
+          }),
+        );
+        setOrderStatusData(formattedData);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    const fetchSalesCustomer = async () => {
-      const data = await getSalesCustomer();
-      setSalesData(data);
-    };
-    const fetchMonthOrders = async () => {
-      const data = await getMonthWiseOrders();
-      const chartData = data.map((item: any) => ({
-        month: `${monthNames[item.month - 1]} ${item.year}`,
-        orders: item.orders,
-        revenue: item.revenue,
-      }));
-      setOrderData(chartData);
-    };
-    const fetchOrders = async()=>{
-      const data = await getAllOrders();
-      setRecentOrders(data.slice(0,5));
-    }
-    const fetchOrderStatusCount = async()=>{
-      const data = await getOrderStatusCount();
-
-      const formattedData= Object.entries(data).map(([key,value])=>({
-        name:key.charAt(0).toUpperCase()+key.slice(1),
-        value
-      }))
-      setOrderStatusData(formattedData);
-    }
-    fetchDashboardStats();
-    fetchSalesCustomer();
-    fetchMonthOrders();
-    fetchOrders();
-    fetchOrderStatusCount();
+    loadDashboardData();
   }, []);
- 
-  console.log("Order Status Data:",orderStatusData);
 
-  if (!dashboardStat) {
-    return  <div className='flex justify-center py-10'>
-            <CircularProgress />
-          </div>
+  if (!dashboardStat || loading) {
+    return (
+      <div className='flex justify-center py-10'>
+        <CircularProgress />
+      </div>
+    );
   }
   return (
     <div className='p-6 min-h-screen bg-gradient-to-br from-slate-100 to-slate-200'>
@@ -198,7 +212,7 @@ const Dashboard = () => {
                 paddingAngle={4}
               >
                 {orderStatusData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i]} />
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -221,29 +235,37 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((order) => (
-                <tr
-                  key={order?._id}
-                  className='border-b last:border-none hover:bg-slate-50 transition'
-                >
-                  <td className='py-3 font-medium'>{`Order ${order?._id?.slice(-6).toUpperCase()}`}</td>
-                  <td>{order?.customer?.name}</td>
-                  <td>{order?.total}</td>
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order?.status === 'completed'
-                          ? 'bg-green-100 text-green-700'
-                          : order?.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {order.status}
-                    </span>
+              {recentOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className='py-4 text-center text-slate-500'>
+                    No recent orders
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentOrders.map((order) => (
+                  <tr
+                    key={order?._id}
+                    className='border-b last:border-none hover:bg-slate-50 transition'
+                  >
+                    <td className='py-3 font-medium'>{`Order ${order?._id?.slice(-6).toUpperCase()}`}</td>
+                    <td>{order?.customer?.name}</td>
+                    <td>{order?.total}</td>
+                    <td>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          order?.status === 'completed'
+                            ? 'bg-green-100 text-green-700'
+                            : order?.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
